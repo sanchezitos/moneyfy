@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default NextAuth({
+export const authOptions = {
   providers: [
     Auth0Provider({
       clientId: process.env.AUTH0_CLIENT_ID!,
@@ -28,7 +28,6 @@ export default NextAuth({
             name: user.name,
             email: user.email,
             role: 'user', // Cambia 'user' por el rol que desees
-            // Otros campos que necesites aquí
           },
         });
       }
@@ -44,4 +43,6 @@ export default NextAuth({
       return session;
     },
   },
-});
+};
+
+export default NextAuth(authOptions);

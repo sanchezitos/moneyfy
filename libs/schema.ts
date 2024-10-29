@@ -1,54 +1,57 @@
+
 import { gql } from 'apollo-server-micro';
 import { PrismaClient } from '@prisma/client';
+import isAdmin from '@/libs/isAdmin';
 
 // Definir esquema de GraphQL
 export const typeDefs = gql`
-  type Movimiento {
+  type Movement {
     id: ID!
-    concepto: String!
-    monto: Float!
-    fecha: String!
-    usuario: Usuario!
+    type: String!
+    amount: Float!
+    date: String!
+    user: User!
   }
 
-  type Usuario {
-    id: ID!
-    nombre: String!
-    correo: String!
-    role: String!
+  type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: String!
+  phoneNumber: String!
   }
 
   type Query {
-    movimientos: [Movimiento]
-    usuarios: [Usuario]
+    movements: [Movement]
+    users: [User]
   }
 
   type Mutation {
-    agregarMovimiento(concepto: String!, monto: Float!, fecha: String!): Movimiento
-    editarUsuario(id: ID!, nombre: String, rol: String): Usuario
+    addMovement(type: String!, amount: Float!, date: String!): Movement
+    editUser(id: ID!, name: String, role: String): User
   }
 `;
 const prisma = new PrismaClient();
 
 // Resolvers (temporalmente vacíos)
 export const resolvers = {
-    Query: {
-      movements: async () => await prisma.movement.findMany(),
-      users: async () => await prisma.user.findMany(),
+  Query: {
+    movements: async () => await prisma.movement.findMany(),
+    users: isAdmin(async () => await prisma.user.findMany()),
+  },
+  Mutation: {
+    addMovement: async (args: { type: string, amount: number, date: Date }) => {
+      const { type, amount, date } = args;
+      return await prisma.movement.create({
+        data: { type, amount, date: new Date(date), userId: 1 },
+      });
     },
-    Mutation: {
-      addMovement: async (_parent, args) => {
-        const { type, amount, date } = args;
-        return await prisma.movement.create({
-          data: { type, amount, date: new Date(date), userId: 1 },
-        });
-      },
-      editUser: async (_parent, args) => {
-        const { id, name, role } = args;
-        return await prisma.user.update({
-          where: { id: Number(id) },
-          data: { name, role },
-        });
-      },
+    editUser: async (args: { id: string | number, name: string, role: string }) => {
+      const { id, name, role } = args;
+      return await prisma.user.update({
+        where: { id: Number(id) },
+        data: { name, role },
+      });
     },
-  };
+  },
+};

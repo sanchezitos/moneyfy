@@ -1,26 +1,22 @@
 // pages/users.tsx
 import { useQuery, gql } from '@apollo/client';
-import { useSession } from 'next-auth/react';
 import WithAuth from '@/libs/WithAuth';
 
 const GET_USERS = gql`
   query GetUsers {
-    usuarios {
+    users {
       id
-      nombre
-      correo
-      rol
+      name
+      email
+      role
     }
   }
 `;
 
 const Users = () => {
   const { data, loading, error } = useQuery(GET_USERS);
-  const { data: session } = useSession();
-console.log("session.....", data)
-  if (!session || session.user.role !== 'admin') {
-    return <p>Acceso denegado. Solo para administradores.</p>;
-  }
+console.log("data.....", data)
+
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
@@ -37,11 +33,11 @@ console.log("session.....", data)
           </tr>
         </thead>
         <tbody>
-          {data.usuarios.map((usuario: any) => (
-            <tr key={usuario.id}>
-              <td className="border px-4 py-2">{usuario.nombre}</td>
-              <td className="border px-4 py-2">{usuario.correo}</td>
-              <td className="border px-4 py-2">{usuario.rol}</td>
+          {data.users.map((user: any) => (
+            <tr key={user.id}>
+              <td className="border px-4 py-2">{user.name}</td>
+              <td className="border px-4 py-2">{user.email}</td>
+              <td className="border px-4 py-2">{user.role}</td>
             </tr>
           ))}
         </tbody>
@@ -50,4 +46,4 @@ console.log("session.....", data)
   );
 };
 
-export default WithAuth(Users, 'admin');;
+export default WithAuth(Users, 'admin');
