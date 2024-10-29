@@ -4,14 +4,14 @@ import Image from 'next/image';
 
 const Navbar = () => {
   return (
-    <nav className="bg-gray-500 p-4 flex items-center">
-       <div className="mr-4">
+    <nav className=" p-4 flex items-center border-1">
+      <div className="mr-4">
         {/* Cambia la ruta según la ubicación de tu logo */}
         <Link href="/">
-          <Image src="/logo.svg" alt="Logo" width={200} height={50} />
+          <Image src="/logo.svg" alt="Logo" width={150} height={50} />
         </Link>
       </div>
-      <ul className="flex space-x-4">
+      {/* <ul className="flex space-x-4">
         <li>
           <Link href="/">Home</Link>
         </li>
@@ -24,7 +24,7 @@ const Navbar = () => {
         <li>
           <Link href="/reports">Reportes</Link>
         </li>
-      </ul>
+      </ul> */}
     </nav>
   );
 };

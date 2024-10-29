@@ -49,7 +49,7 @@ export function AppSidebar() {
                                 return (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton style={{ background: isActive ? "#e0c8ff" : "transparent", color: isActive ? "#8A3DBE" : "#000000" }} asChild isActive={isActive}>
-                                            <Link onClick={() => signOut({ callbackUrl: process.env.NEXTAUTH_URL || 'http://localhost:3000' })} href={item.url} className={`${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                                            <Link href={item.url} className={`${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                                                 }`}>
 
                                                 <item.icon />
@@ -69,19 +69,14 @@ export function AppSidebar() {
             <Separator/>
             <SidebarFooter>
                 <SidebarMenu>
-
                     <SidebarMenuItem key={"Cerrar sesion"}>
                         <SidebarMenuButton asChild className='font-m'>
-                            <Link href={"/Logout"}>
-
+                            <Link onClick={() => signOut({ callbackUrl: process.env.NEXTAUTH_URL || 'http://localhost:3000' })}  href={"#"}>
                                 <LogOut />
                                 <span className="ml-2">{"Cerrar sesion"}</span>
-
-
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-
                 </SidebarMenu>
             </SidebarFooter>
             <Separator/>
