@@ -20,15 +20,15 @@ const EDIT_USER = gql`
 `;
 
 interface EditUserFormProps {
-    initialId: string
-    initialName: string;
-    initialRole: string;
+    initialId?: string
+    initialName?: string;
+    initialRole?: string;
     onClose: () => void;
     onUserUpdated: () => void; // Callback para recargar la lista de usuarios después de actualizar
 }
 
 const EditUserForm: React.FC<EditUserFormProps> = ({ initialId, initialName, initialRole, onClose, onUserUpdated }) => {
-    const [id, setId] = useState(initialId);
+    const [id] = useState(initialId);
     const [name, setName] = useState(initialName);
     const [role, setRole] = useState(initialRole);
     const [editUser, { loading, error }] = useMutation(EDIT_USER);

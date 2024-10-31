@@ -128,9 +128,9 @@ const Users = () => {
             {/* Dialog for editing user */}
             {openDialog === 'edit' && (
               <EditUserForm
-              initialId={openEditDialog.id}
-              initialName={openEditDialog.name}
-              initialRole={openEditDialog.role}
+              initialId={openEditDialog?.id}
+              initialName={openEditDialog?.name}
+              initialRole={openEditDialog?.role}
               onClose={() => {
                 setOpenEditDialog(null)
                 setOpenDialog(null) 
