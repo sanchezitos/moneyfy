@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { BreadcrumbWithCustomSeparator } from "./breadCumb";
 import { Separator } from "@radix-ui/react-separator";
 import LandingHome from "./LandingHome";
+import { Toaster } from "./ui/sonner";
 
 export default function Layout({ children }) {
   const { data: session } = useSession();
@@ -25,6 +26,7 @@ export default function Layout({ children }) {
             <main className="p-4">
               {children}
             </main>
+            <Toaster />
           </SidebarInset>
 
 

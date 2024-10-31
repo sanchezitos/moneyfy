@@ -46,7 +46,8 @@ export const resolvers = {
         data: { type, amount, date: new Date(date), userId: 1 },
       });
     },
-    editUser: async (args: { id: string | number, name: string, role: string }) => {
+    editUser: async (_, args: { id: string | number, name: string, role: string }) => {
+      console.log("ARgs on schema....", args)
       const { id, name, role } = args;
       return await prisma.user.update({
         where: { id: Number(id) },

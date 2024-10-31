@@ -1,15 +1,19 @@
 
-import AuthButtons from "@/components/AuthButtons";
+import withAuth from "@/libs/WithAuth";
+import { useSession } from "next-auth/react";
 import React from "react";
 
-export default function Home() {
+const Home = () => {
+  const { data: session } = useSession();
   return (
-   <>
-     <h1 className="text-xl font-bold">Bienvenido a la Gestión de Finanzas</h1>
-      <AuthButtons />
-    
-   </>
-    
+    <>
+      <div className="p-4">
+        <h1 className="text-xl font-bold">Bienvenido a MONEYFY, {session.user?.name}</h1>
+
+
+      </div>
+    </>
 
   );
-}
+};
+export default withAuth(Home, ["admin", "user"])

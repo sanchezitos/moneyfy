@@ -4,13 +4,13 @@ import { useSession } from 'next-auth/react';
 
 const GET_MOVEMENTS = gql`
   query GetMovements {
-    movimientos {
+    movements {
       id
-      concepto
-      monto
-      fecha
-      usuario {
-        nombre
+      type
+      amount
+      date
+      user {
+        name
       }
     }
   }
@@ -36,12 +36,12 @@ const Movements = () => {
           </tr>
         </thead>
         <tbody>
-          {data.movimientos.map((movimiento: any) => (
-            <tr key={movimiento.id}>
-              <td className="border px-4 py-2">{movimiento.concepto}</td>
-              <td className="border px-4 py-2">${movimiento.monto}</td>
-              <td className="border px-4 py-2">{new Date(movimiento.fecha).toLocaleDateString()}</td>
-              <td className="border px-4 py-2">{movimiento.usuario.nombre}</td>
+          {data.movements.map((movement: any) => (
+            <tr key={movement.id}>
+              <td className="border px-4 py-2">{movement.type}</td>
+              <td className="border px-4 py-2">${movement.amount}</td>
+              <td className="border px-4 py-2">{new Date(movement.date).toLocaleDateString()}</td>
+              <td className="border px-4 py-2">{movement.user.name}</td>
             </tr>
           ))}
         </tbody>
