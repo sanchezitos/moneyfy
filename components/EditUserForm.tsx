@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import DialogModal from '@/components/DialogModal';
 import { Input } from '@/components/ui/input';
@@ -7,17 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from '@/components/ui/select';
 
 import { toast } from "sonner"
+import { EDIT_USER } from '@/graphql/mutations/editUser';
 
 
-const EDIT_USER = gql`
-  mutation EditUser($id: ID!, $name: String, $role: String) {
-    editUser(id: $id, name: $name, role: $role) {
-      id
-      name
-      role
-    }
-  }
-`;
 
 interface EditUserFormProps {
     initialId?: string

@@ -10,7 +10,7 @@ export const typeDefs = gql`
     type: String!
     amount: Float!
     date: String!
-    user: User!
+    user: User! 
   }
 
   type User {
@@ -27,7 +27,7 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    addMovement(type: String!, amount: Float!, date: String!): Movement
+    addMovement(type: String!, amount: Float!, date: String!, userId: ID!): Movement
     editUser(id: ID!, name: String, role: String): User
   }
 `;
@@ -39,11 +39,18 @@ export const resolvers = {
     movements: async () => await prisma.movement.findMany(),
     users: isAdmin(async () => await prisma.user.findMany()),
   },
+  Movement: {
+    user: async (parent) => {
+      return await prisma.user.findUnique({
+        where: { id: parent.userId },
+      });
+    },
+  },
   Mutation: {
-    addMovement: async (args: { type: string, amount: number, date: Date }) => {
-      const { type, amount, date } = args;
+    addMovement: async (_: unknown, args: { type: string, amount: number, date: Date, userId: number }) => {
+      const { type, amount, date, userId } = args;
       return await prisma.movement.create({
-        data: { type, amount, date: new Date(date), userId: 1 },
+        data: { type, amount, date: new Date(date), userId },
       });
     },
     editUser: async (_: unknown, args: { id: string | number, name: string, role: string }) => {

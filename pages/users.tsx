@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import WithAuth from '@/libs/WithAuth';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/DataTable';
@@ -18,19 +18,10 @@ import {
 import Loading from '@/components/Loading';
 import DialogModal from '@/components/DialogModal';
 import EditUserForm from '@/components/EditUserForm';
+import { GET_USERS } from '@/graphql/queries/getUsers'
 
-const GET_USERS = gql`
-  query GetUsers {
-    users {
-      id
-      name
-      email
-      role
-    }
-  }
-`;
 
-interface User {
+export interface User {
     id: string;
     name: string;
     email: string;
@@ -38,7 +29,7 @@ interface User {
 }
 
 const Users = () => {
-    const { data, loading, error, refetch} = useQuery(GET_USERS);
+    const { data, loading, error, refetch } = useQuery(GET_USERS);
     const [openDialog, setOpenDialog] = useState<'edit' | 'add' | null>(null);
     const [openEditDialog, setOpenEditDialog] = useState<{ id: string; name: string; role: string } | null>(null);
 
@@ -89,8 +80,8 @@ const Users = () => {
                             <DropdownMenuSeparator />
                             <DropdownMenuGroup>
                                 <DropdownMenuItem onClick={() => {
-                                    setOpenDialog('edit') 
-                                setOpenEditDialog(user)
+                                    setOpenDialog('edit')
+                                    setOpenEditDialog(user)
                                 }
 
                                 }>
@@ -99,7 +90,7 @@ const Users = () => {
                                 </DropdownMenuItem>
                             </DropdownMenuGroup>
                             <DropdownMenuGroup>
-                               {/*  <DropdownMenuItem>
+                                {/*  <DropdownMenuItem>
                                     <UserPen />
                                     <span>Eliminar usuario</span>
                                 </DropdownMenuItem> */}
@@ -127,16 +118,16 @@ const Users = () => {
 
             {/* Dialog for editing user */}
             {openDialog === 'edit' && (
-              <EditUserForm
-              initialId={openEditDialog?.id}
-              initialName={openEditDialog?.name}
-              initialRole={openEditDialog?.role}
-              onClose={() => {
-                setOpenEditDialog(null)
-                setOpenDialog(null) 
-              }}
-              onUserUpdated={refetch} // Recarga los datos de usuario después de actualizar
-          />
+                <EditUserForm
+                    initialId={openEditDialog?.id}
+                    initialName={openEditDialog?.name}
+                    initialRole={openEditDialog?.role}
+                    onClose={() => {
+                        setOpenEditDialog(null)
+                        setOpenDialog(null)
+                    }}
+                    onUserUpdated={refetch} // Recarga los datos de usuario después de actualizar
+                />
             )}
 
             {/* Dialog for adding movement */}
