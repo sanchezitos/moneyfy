@@ -23,6 +23,7 @@ model User {
 model Movement {
   id       Int       @id @default(autoincrement())
   type     String
+  concept  String
   amount   Float
   date     DateTime
   user     User      @relation(fields: [userId], references: [id])

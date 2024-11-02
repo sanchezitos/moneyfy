@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useQuery, gql } from '@apollo/client';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Plus, UserPen } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus, UserPen } from 'lucide-react';
 import { User } from './users';
 import Loading from '@/components/Loading';
 import { useState } from 'react';
@@ -11,21 +11,15 @@ import { DataTable } from '@/components/DataTable';
 import AddMovementForm from '@/components/AddMovementForm';
 import { useSession } from 'next-auth/react';
 import { GET_USERS } from '@/graphql/queries/getUsers';
+import { GET_MOVEMENTS } from '@/graphql/queries/getMovements';
 
-const GET_MOVEMENTS = gql`
-  query GetMovements {
-    movements {
-      id
-      type
-      amount
-      date
-      user {
-        id
-        name
-      }
-    }
-  }
-`;
+import dayjs from 'dayjs';
+import 'dayjs/locale/es'; // Importa el idioma español si deseas formatear en español
+import EditMovementForm from '@/components/EditMovementForm';
+dayjs.locale('es'); // Configura Day.js para usar el idioma español
+
+
+
 interface Movement {
   id: string;
   type: string;
@@ -36,18 +30,18 @@ interface Movement {
 
 const Movements = () => {
   const { data: session } = useSession();
-  const { data, loading, error } = useQuery(GET_MOVEMENTS);
-  console.log(" on movements....",data)
+  const { data, loading, error, refetch } = useQuery(GET_MOVEMENTS);
+  console.log(" on movements....", data)
 
   const { data: users, loading: loading_users, error: error_users } = useQuery(GET_USERS);
   console.log("Users on movements....", users)
 
   const [openDialog, setOpenDialog] = useState<'edit' | 'add' | null>(null);
-  const [openAddDialog, setOpenAddDialog] = useState<{ id: string; type: string; amount: string; date: string } | null>(null);
+  const [openEditDialog, setOpenEditDialog] = useState<{ id: string, type: string; concept: string; amount: string; date: string } | null>(null);
 
   const columns: ColumnDef<Movement>[] = [
     {
-      accessorKey: "type",
+      accessorKey: "concept",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -57,6 +51,38 @@ const Movements = () => {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+    },
+    {
+      accessorKey: "type",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Tipo
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const type = row.original.type
+        if (type === "credit") {
+          return (
+            <div className="flex justify-center items-center">
+              <ArrowUp width={20} className='text-green-700' />
+              <span>Ingreso</span>
+            </div>
+          );
+        } else {
+          return (
+            <div className="flex justify-center items-center">
+              <ArrowDown width={20} className='text-red-700' />
+              <span>Gasto</span>
+            </div>
+          )
+
+        }
+
+      }
     },
     {
       accessorKey: "amount",
@@ -69,15 +95,32 @@ const Movements = () => {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-    },
-    {
-      accessorKey: "date",
-      header: "Fecha",
+      cell: ({ row }) => {
+        const formattedAmount = new Intl.NumberFormat("es-CO", {
+          style: "currency",
+          currency: "COP",
+          minimumFractionDigits: 0, // Opcional: para evitar decimales si no son necesarios
+        }).format(row.original.amount);
+        return (
+          <div>{formattedAmount}</div>
+        );
+      }
     },
     {
       accessorKey: "user.name",
       header: "Usuario",
     },
+    {
+      accessorKey: "date",
+      header: "Fecha",
+      cell: ({ row }) => {
+        const formattedDate = dayjs(Number(row.original.date)).format("DD [de] MMMM [de] YYYY");
+        return (
+          <div>{formattedDate}</div>
+        );
+      }
+    },
+
     {
       id: "actions",
       cell: ({ row }) => {
@@ -87,7 +130,6 @@ const Movements = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -102,21 +144,16 @@ const Movements = () => {
 
                 }>
                   <UserPen />
-                  <span>Editar usuario</span>
+                  <span>Editar movimiento</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuGroup>
-                {/*  <DropdownMenuItem>
-                                <UserPen />
-                                <span>Eliminar usuario</span>
-                            </DropdownMenuItem> */}
-              </DropdownMenuGroup>
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => setOpenDialog('add')}>
-                  <Plus />
-                  <span>Agregar movimiento</span>
+                <DropdownMenuItem>
+                  <UserPen />
+                  <span>Eliminar movimiento</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
+
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -125,8 +162,8 @@ const Movements = () => {
   ];
 
 
-  if (loading) return <Loading />;
-  if (error) return <p>Error: {error.message}</p>;
+  if (loading || loading_users) return <Loading />;
+  if (error || error_users) return <p>Error: {error.message}</p>;
 
   return (
 
@@ -135,18 +172,31 @@ const Movements = () => {
       <Button className='bg-purple-700 hover:bg-purple-300' onClick={() => setOpenDialog("add")}>
         <Plus /> Agregar
       </Button>
-     
+
       <DataTable columns={columns} data={data.movements} />
       {openDialog === 'add' && (
         <AddMovementForm
-        dataUsers={users}
+          dataUsers={users}
           onClose={() => {
-
-            setOpenAddDialog(null)
+            refetch()
             setOpenDialog(null)
           }}
         />
 
+      )}
+      {openDialog === "edit" && (
+        <EditMovementForm
+        initialId={openEditDialog?.id}
+        initialConcept={openEditDialog?.concept}
+        initialType={openEditDialog?.type}
+        initialAmount={openEditDialog?.amount}
+        initialDate={openEditDialog?.date}
+        onClose={() => {
+          setOpenEditDialog(null)
+          setOpenDialog(null)
+        }}
+        onMovementUpdated={refetch}
+        />
       )}
     </div>
   );

@@ -5,69 +5,60 @@ import DialogModal from '@/components/DialogModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar'
-
 
 import { toast } from "sonner"
+import { EDIT_MOVEMENT } from '@/graphql/mutations/editMovement';
 import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { ADD_MOVEMENT } from '@/graphql/mutations/addMovement';
+import { Calendar } from '@/components/ui/calendar'
 
-interface AddMovementFormProps {
-    dataUsers: { users: [] },
+
+
+interface EditMovementFormProps {
+    initialId: string;
+    initialConcept?: string;
+    initialType?: string;
+    initialAmount?: string;
+    initialDate?: string;
     onClose: () => void;
+    onMovementUpdated: () => void;
 }
 
-const AddMovementForm: React.FC<AddMovementFormProps> = ({ dataUsers, onClose }) => {
-    const [addMovement, { loading, error }] = useMutation(ADD_MOVEMENT);
-    const { users } = dataUsers;
-    const [user, setUser] = useState<number>();
-    const [type, setType] = useState<string>("");
-    const [amount, setAmount] = useState<number>();
-    const [date, setDate] = useState<Date>()
-    console.log("Date on movement add form....", date)
-    const [concept, setConcept] = useState<string>("");
+const EditMovementForm: React.FC<EditMovementFormProps> = ({ initialId, initialConcept, initialType, initialAmount, initialDate, onClose, onMovementUpdated }) => {
+    const [id, setId] = useState(initialId)
+    const [concept, setConcept] = useState(initialConcept);
+    const [type, setType] = useState(initialType);
+    const [amount, setAmount] = useState(initialAmount);
+    const [date, setDate] = useState(
+        initialDate ? new Date(Number(initialDate)) : null);
+    const [editMovement, { loading, error }] = useMutation(EDIT_MOVEMENT);
+
     const handleSave = async () => {
         try {
-            await addMovement({
-                variables: { type, amount, date, userId: user, concept },
+            await editMovement({
+                variables: { id, concept, type, amount, date},
             });
+            onMovementUpdated();
             onClose();
-            toast.success("Movimiento registrado exitosamente"); // Cierra el diálogo después de la creación
+            toast.success("Movimiento actualizado exitosamente");
         } catch (e) {
-            console.error("Error adding movement:", e);
+            console.error("Error updating movement:", e);
         }
     };
 
     return (
         <DialogModal
             isOpen={true}
-            title="Agregar movimiento"
-            description="Agrega un movimiento "
+            title="Editar movimiento"
+            description="Puedes modificar los campos que necesites"
             onClose={onClose}
         >
             <form className="space-y-4">
                 <div>
-                    <Label htmlFor="type" className="text-sm font-medium">Usuario</Label>
-                    <Select
-                        onValueChange={(value) => setUser(parseFloat(value))}
-                    >
-                        <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Selecciona un usuario" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {users.map(user => {
-                                return (
-                                    <SelectItem key={user?.id} value={user.id}>{user.email}</SelectItem>
-                                )
-                            })}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
                     <Label htmlFor="type" className="text-sm font-medium">Tipo de movimiento</Label>
                     <Select
+                        value={type}
                         onValueChange={(value) => setType(value)}
                     >
                         <SelectTrigger className="mt-1">
@@ -111,7 +102,7 @@ const AddMovementForm: React.FC<AddMovementFormProps> = ({ dataUsers, onClose })
                                 className={"mt-1"}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP") : <span>Elige una fecha</span>}
+                                {date ? format(new Date(Number(date)), "PPP") : <span>Elige una fecha</span>}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 bg-white border border-gray-300 shadow-lg rounded-md">
@@ -124,8 +115,7 @@ const AddMovementForm: React.FC<AddMovementFormProps> = ({ dataUsers, onClose })
                         </PopoverContent>
                     </Popover>
                 </div>
-
-                {error && <p className="text-red-500 text-sm">Error al crear movimiento.</p>}
+                {error && <p className="text-red-500 text-sm">Error al actualizar el movimiento.</p>}
 
                 <div className="flex justify-end space-x-2">
                     <Button variant="ghost" onClick={onClose}>
@@ -140,4 +130,4 @@ const AddMovementForm: React.FC<AddMovementFormProps> = ({ dataUsers, onClose })
     );
 };
 
-export default AddMovementForm;
+export default EditMovementForm;
