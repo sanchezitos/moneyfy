@@ -114,7 +114,7 @@ const Users = () => {
     return (
         <div className="p-4">
             <h1 className="text-xl font-bold">Gestión de Usuarios</h1>
-            <DataTable columns={columns} data={data.users} />
+            <DataTable columns={columns} data={data.users} filter='name'/>
 
             {/* Dialog for editing user */}
             {openDialog === 'edit' && (

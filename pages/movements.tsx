@@ -172,7 +172,7 @@ const Movements = () => {
         <Plus /> Agregar
       </Button>
 
-      <DataTable columns={columns} data={data.movements} />
+      <DataTable columns={columns} data={data.movements}  filter='concept'/>
       {openDialog === 'add' && (
         <AddMovementForm
           dataUsers={users}

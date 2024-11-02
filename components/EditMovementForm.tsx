@@ -16,7 +16,7 @@ import { Calendar } from '@/components/ui/calendar'
 
 
 interface EditMovementFormProps {
-    initialId: string;
+    initialId?: string;
     initialConcept?: string;
     initialType?: string;
     initialAmount?: string;
