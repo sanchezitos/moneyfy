@@ -1,45 +1,74 @@
-import { useState } from 'react';
+// Librerías de terceros
 import { useMutation } from '@apollo/client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { toast } from "sonner";
+
+// Componentes internos de UI y utilidades
 import { Button } from '@/components/ui/button';
 import DialogModal from '@/components/DialogModal';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar'
-
-
-import { toast } from "sonner"
+import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { FormControl, FormField, FormItem, FormLabel, Form, FormMessage } from './ui/form';
+
+// Archivos específicos del proyecto
 import { ADD_MOVEMENT } from '@/graphql/mutations/addMovement';
+
 
 interface AddMovementFormProps {
     dataUsers: { users: [] },
     onClose: () => void;
 }
 
+const addMovementFormSchema = z.object({
+    user: z.string().min(1, {
+        message: "Usuario debe tener al menos 2 caracteres.",
+    }).max(50),
+    concept: z.string().min(2, {
+        message: "Concepto debe tener al menos 2 caracteres.",
+    }).max(50),
+    type: z.string().min(2, {
+        message: "Tipo debe tener al menos 2 caracteres.",
+    }).max(50),
+    amount: z.string().min(3, {
+        message: "Monto debe ser mayor a 100 COP",
+    }),
+    date: z.date({
+        required_error: "La fecha del movimiento es obligatoria",
+    }),
+
+})
+
 const AddMovementForm: React.FC<AddMovementFormProps> = ({ dataUsers, onClose }) => {
+    const form = useForm<z.infer<typeof addMovementFormSchema>>({
+        resolver: zodResolver(addMovementFormSchema),
+        defaultValues: {
+            user: "",
+            concept: "",
+            type: "",
+            amount: "",
+            date: new Date(),
+        }
+    })
     const [addMovement, { loading, error }] = useMutation(ADD_MOVEMENT);
     const { users } = dataUsers;
-    const [user, setUser] = useState<number>();
-    const [type, setType] = useState<string>("");
-    const [amount, setAmount] = useState<number>();
-    const [date, setDate] = useState<Date>()
-    console.log("Date on movement add form....", date)
-    const [concept, setConcept] = useState<string>("");
-    const handleSave = async () => {
+    async function onSubmit(data: z.infer<typeof addMovementFormSchema>) {
+        const { type, concept, amount, date, user } = data
         try {
             await addMovement({
-                variables: { type, amount, date, userId: user, concept },
+                variables: { type, amount: parseFloat(amount), date, userId: parseFloat(user), concept },
             });
             onClose();
             toast.success("Movimiento registrado exitosamente"); // Cierra el diálogo después de la creación
         } catch (e) {
             console.error("Error adding movement:", e);
         }
-    };
-
+    }
     return (
         <DialogModal
             isOpen={true}
@@ -47,95 +76,121 @@ const AddMovementForm: React.FC<AddMovementFormProps> = ({ dataUsers, onClose })
             description="Agrega un movimiento "
             onClose={onClose}
         >
-            <form className="space-y-4">
-                <div>
-                    <Label htmlFor="type" className="text-sm font-medium">Usuario</Label>
-                    <Select
-                        onValueChange={(value) => setUser(parseFloat(value))}
-                    >
-                        <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Selecciona un usuario" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {users.map(user => {
-                                return (
-                                    <SelectItem key={user?.id} value={user.id}>{user.email}</SelectItem>
-                                )
-                            })}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label htmlFor="type" className="text-sm font-medium">Tipo de movimiento</Label>
-                    <Select
-                        onValueChange={(value) => setType(value)}
-                    >
-                        <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Selecciona un concepto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="credit">Ingreso</SelectItem>
-                            <SelectItem value="debit">Gasto</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label htmlFor="concept" className="text-sm font-medium">Concepto</Label>
-                    <Input
-                        id="concept"
-                        type="text"
-                        value={concept}
-                        onChange={(e) => setConcept(e.target.value)}
-                        className="mt-1"
-                        placeholder='Compras supermercado'
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="user"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Usuario</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona un usuario" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {users.map((user: { id: string, email: string }) => {
+                                            return (
+                                                <SelectItem key={user?.id} value={user.id}>{user.email}</SelectItem>
+                                            )
+                                        })}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                </div>
-                <div>
-                    <Label htmlFor="amount" className="text-sm font-medium">Monto</Label>
-                    <Input
-                        id="amount"
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(parseFloat(e.target.value))}
-                        className="mt-1"
-                        placeholder='100000'
+                    <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Tipo</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona un tipo" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="credit">Ingreso</SelectItem>
+                                        <SelectItem value="debit">Gasto</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                </div>
-                <div>
-                    <Label htmlFor="date" className="text-sm font-medium">Fecha</Label>
-                    <br></br>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={"mt-1"}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP") : <span>Elige una fecha</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-white border border-gray-300 shadow-lg rounded-md">
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
+                    <FormField
+                        control={form.control}
+                        name="concept"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Concepto</FormLabel>
+                                <FormControl>
+                                    <Input onChange={field.onChange} placeholder="Compra supermercado" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="amount"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Valor</FormLabel>
+                                <FormControl>
+                                    <Input onChange={field.onChange} type='number' placeholder="100000" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Fecha</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={"mt-1"}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {field.value ? format(field.value, "PPP") : <span>Elige una fecha</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 bg-white border border-gray-300 shadow-lg rounded-md">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    {error && <p className="text-red-500 text-sm">Error al crear movimiento.</p>}
 
-                {error && <p className="text-red-500 text-sm">Error al crear movimiento.</p>}
+                    <div className="flex justify-end space-x-2">
+                        <Button variant="ghost" onClick={onClose}>
+                            Cancelar
+                        </Button>
+                        <Button type="submit" className='bg-purple-700 hover:bg-purple-300' /* onClick={handleSave} */ disabled={loading}>
+                            {loading ? 'Guardando...' : 'Guardar'}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
 
-                <div className="flex justify-end space-x-2">
-                    <Button variant="ghost" onClick={onClose}>
-                        Cancelar
-                    </Button>
-                    <Button className='bg-purple-700 hover:bg-purple-300' onClick={handleSave} disabled={loading}>
-                        {loading ? 'Guardando...' : 'Guardar'}
-                    </Button>
-                </div>
-            </form>
         </DialogModal>
     );
 };

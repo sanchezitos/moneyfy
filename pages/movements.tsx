@@ -31,7 +31,6 @@ interface Movement {
 const Movements = () => {
   const { data: session } = useSession();
   const { data, loading, error, refetch } = useQuery(GET_MOVEMENTS);
-  console.log(" on movements....", data)
 
   const { data: users, loading: loading_users, error: error_users } = useQuery(GET_USERS);
   console.log("Users on movements....", users)
